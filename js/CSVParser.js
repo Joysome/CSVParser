@@ -73,13 +73,14 @@ var Table = function (data) {
     this.isCorrect = true;
     //TODO: input data checks here
     this.columnNames;//TODO: rename this
-    this.rows = [[]];//data.split(/\r?\n|\r/);
+    this.rows = [[]];
     this.parseString = function (string) {
-        var patternSingleQuoted = "'[^'\\]*(?:\\[\S\s][^'\\]*)*'";//"'[^'\\]*(?:\\[\S\s][^'\\]*)*'";
-        var patternDoubleQuoted = "[^\"\\]*(?:\\[\S\s][^\"\\]*)*";
-        var patternNonQuoted = "[^,]+";//"[^,'\"\s\\]*(?:\s+[^,'\"\s\\]+)*";
-        var patternComplete = "(?:(" + patternDoubleQuoted + ")|(" + patternSingleQuoted + ")|(" + patternNonQuoted + "))";
-        var pattern = new RegExp(/*patternComplete*/"([^*,]+)", "g");
+        var patternBeforeElem = "((?<=^)|(?<=\,))+";
+        var pattenrAfterElem = "((?=\,)|(?=$))+";
+        var patternNonQuoted = + "(?:[^\,\"$])*";
+        var patternDoubleQuoted = "\"+(?:[\s\S]|\"(?!\,)|(?<!\")\,)*\"+";
+        var patternComplete = "((?<=^)|(?<=\,))+(\"+(?:[\s\S]|\"(?!\,)|(?<!\")\,)*\"+)|((?:[^\,\"$])*)((?=\,)|(?=$))+";
+        var pattern = new RegExp(patternComplete, "g");
         var res = string.match(pattern);
         return res;
     }
@@ -99,7 +100,7 @@ var Table = function (data) {
             }
         }
     }
-    this.parseTable(data.match(/[^\r\n]+/g));
+    this.parseTable(data.match(/[^\r?\n]+/g));
 
     
 }
