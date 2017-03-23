@@ -19,4 +19,12 @@ function generateTable() {
     var inputData = document.getElementById("csv-input").value;
     var tableContainer = document.getElementById("table-container");
     tableContainer.innerHTML = getAll(inputData);//test
+
+    //document.write(testParse(inputData).join("<br />"));
+}
+
+function testParse(string) {
+    document.write(string);
+    var res = string.match(/([^*,]+)/g);
+    return res;
 }
