@@ -24,13 +24,18 @@ function generateTable() {
 }
 
 function getTable(inputData) {
-    var datePattern = "(((19|20)([2468][048]|[13579][26]|0[48])|2000)[/-]02[/-]29|((19|20)[0-9]{2}[/-](0[4678]|1[02])[/-](0[1-9]|[12][0-9]|30)|(19|20)[0-9]{2}[/-](0[1359]|11)[/-](0[1-9]|[12][0-9]|3[01])|(19|20)[0-9]{2}[/-]02[/-](0[1-9]|1[0-9]|2[0-8])))";
-    alert("1995-03-05" + new RegExp(datePattern).test("1995-03-05"));
-    var d = new Date("1995-03-05");
-    var datestring = d.getDate() + "-" + (d.getMonth() + 1) + "-" + d.getFullYear();
-    alert(datestring);
 
-    var parsedDataArray = CSVParser.parse(inputData);//TODO: maybe a try/catch block here
-    var table = Widgets.Table(parsedDataArray);
+    var value = new Date(Date.parse("5.3.2015"));
+    var q = value.getUTCFullYear();
+    var w = value.toDateString();
+    var e = value.getUTCDay();
+    //var outputString = value.getYear().toString() + "-"
+    //                    + value.getMonth().toString() + "-"
+    //                    + value.getDay().toString();
+    //alert(outputString);
 
+    var parsedDataArray = CSVParser.parse(inputData);
+    //TODO: make table a gloabal variable
+    var parsedCSVDataTable = new Widgets.Table(parsedDataArray);
+    return parsedCSVDataTable.getHTMLMarkup("table");
 }

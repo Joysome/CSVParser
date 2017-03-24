@@ -48,7 +48,7 @@
             [
                 "SomeOtherText", 1829247, "2015-10-12"
             ]
-        ]
+        ];
         return resArrayTest;
     };
 
