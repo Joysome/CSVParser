@@ -7,9 +7,30 @@
     var _datePattern = "(((19|20)([2468][048]|[13579][26]|0[48])|2000)[/-]02[/-]29|((19|20)[0-9]{2}[/-](0[4678]|1[02])[/-](0[1-9]|[12][0-9]|30)|(19|20)[0-9]{2}[/-](0[1359]|11)[/-](0[1-9]|[12][0-9]|3[01])|(19|20)[0-9]{2}[/-]02[/-](0[1-9]|1[0-9]|2[0-8])))";
 
     var _dataTypes = {
-        TEXT: 0,
-        NUMBERS: 1,
-        DATE: 2
+        TEXT: {
+            toString: function () {
+
+            },
+            parse: function (string) {
+                return value;//no need to parse
+            }
+        },
+        NUMBER: {
+            toString: function () {
+
+            },
+            parse: function (string) {
+                return value;//no need to parse
+            }
+        },
+        DATE: {
+            toString: function () {
+
+            },
+            parse: function (string) {
+                return new Date(string);
+            }
+        }
     };
     var _sortStates = {
         UNSORTED: 0,
@@ -24,13 +45,44 @@
     };
 
     this.Table = function (dataArray) {
-        var isCorrect = true;
+        //var isCorrect = true;//TODO: remove this
         this.head = [];//all items should be objects with fields "data"(string) and "sortable"(bool)
-        this.rows = [[]];
+        this.columns = [[]];
+
+        var _getDataType = function (value) {
+            if (isNaN(value)) {
+                if (new RegExp(datePattern).test(value)) {
+                    return _dataTypes.DATE;
+                } else {
+                    return _dataTypes.TEXT;
+                }
+            } else {
+                return _dataTypes.NUMBER;
+            }
+        };
+        var _validateInputArray = function (inputArray) {
+            //TODO: more data checks here
+            //TODO: different error types for different catch blocks
+            if (inputArray === null) {
+                throw new Error("Data array for populating table shouldn't be null.");
+            }
+            if (inputArray.length <= 2) {
+                throw new Error("Table should contain a header and at least one row.");
+            }
+            var colCount = inputArray[0].length;
+            for (row in rows) {
+                if(inputArray[row].length !== colCount){
+                    throw new Error("Data array should contain same number of cells in each row");
+                }
+            }
+        };
+
+        
 
         this.getHTMLMarkup = function (tableClasses, errorClasses) {
             //TODO: data checks here 
             //all classes names should be valid strings
+            //TODO: as there are multiple data types now, should be a check for column date type
             this.validate();//???
 
             if (this.isCorrect) {
@@ -63,49 +115,39 @@
             return html;
         };
         this.populate = function (dataArray) {
-            this.clear();
-            for (var rowNumber = 0; rowNumber < dataArray.length; rowNumber++) {
-                if (rowNumber === 0) {
-                    this.columnNames = dataArray[rowNumber];
-                }
-                else {
-                    //todo: here will be some logic for defining row type
-                    if (dataArray[rowNumber].length === this.head.length) {
-                        this.rows.push(dataArray[rowNumber]);
-                    }
+            _validateInputArray(dataArray);
+            this.clear();            
+
+            for (var columnNumber = 0; columnNumber < this.head.length; columnNumber++) {
+
+                //setting column header
+                this.head.push(new ColumnHeader(dataArray[0][columnNumber]));
+
+                //defining columns data type
+                for (var rowNumber = 1; rowNumber < dataArray.length; rowNumber++) {
+                    if (rowNumber === 1) {
+                        this.head[columnNumber].dataType = _getDataType(dataArray[row][column]);
+                    } 
                     else {
-                        this.isCorrect = false;
-                        break;
+                        if (this.head[columnNumber].dataType !== _dataTypes.TEXT) {
+                            var cellDataType = _getDataType(dataArray[row][column]);
+                            if (cellDataType !== this.head[columnNumber].dataType) {
+                                this.head[columnNumber].dataType == _dataTypes.TEXT;
+                            }
+                        }                        
                     }
                 }
-            }
-            _validate();
-            for(colNum in this.head){
-                _defineColumnDataType(columnNumber);
-            }
-        };
-        var _validate = function () {
-            //TODO
-        };
-        var _parseCell = function (cellValue) {
-            if (isNaN(cellValue)) {
-                if (new RegExp(datePattern).test(cellValue)) {
-                    var date = Date.parse(cellValue);
+                //populating column
+                for (var rowNumber = 1; rowNumber < dataArray.length; rowNumber++) {
+                    var value = dataArray[rowNumber][columnNumber];
+                    this.columns.push(value);
+                    
+                    
                 }
-            }
-            
-        };
-        var _defineColumnDataType = function(columnNumber){
-            for (row in this.rows) {
+                
                 
             }
-            //number
-            
-            //date in ISO format: YYYY-MM-DD
-
-            //text
-
-        }
+        };
         this.clear = function () {
             this.head = [];
             this.rows = [[]];
@@ -114,9 +156,7 @@
             //TODO
         };
 
-        if(dataArray !== null){
-            this.populate(dataArray);
-        }
+        this.populate(dataArray);
     }
 
     
