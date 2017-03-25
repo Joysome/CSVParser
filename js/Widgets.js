@@ -6,7 +6,7 @@
     
     var _datePattern = "(((19|20)([2468][048]|[13579][26]|0[48])|2000)[/-]02[/-]29|((19|20)[0-9]{2}[/-](0[4678]|1[02])[/-](0[1-9]|[12][0-9]|30)|(19|20)[0-9]{2}[/-](0[1359]|11)[/-](0[1-9]|[12][0-9]|3[01])|(19|20)[0-9]{2}[/-]02[/-](0[1-9]|1[0-9]|2[0-8])))";
 
-    this.Table = function (dataArray) {
+    this.Table = function () {
 
         //private fields
         var _dataTypes = {
@@ -15,7 +15,7 @@
                     return value;
                 },
                 parse: function (string) {
-                    return string;//no need to parse
+                    return string;
                 }
             },
             NUMBER: {
@@ -23,7 +23,7 @@
                     return value;
                 },
                 parse: function (string) {
-                    return string;//no need to parse
+                    return string;
                 }
             },
             DATE: {
@@ -37,14 +37,50 @@
             }
         };
         var _sortStates = {
-            UNSORTED: 0,
-            ASCENDING: 1,
-            DESCENDING: 2
+            UNSORTED: {
+                getSortFunction: function (context) {
+                    context.changeSortState(_sortStates.ASCENDING);
+                    return context.currentSortState.sortFunction;
+                },
+                sortFunction: null
+            },
+            ASCENDING: {
+                getSortFunction: function (context) {
+                    context.changeSortState(_sortStates.DESCENDING);
+                    return context.currentSortState.sortFunction;
+                },
+                sortFunction: function (a, b) { return a - b; }
+            },
+            DESCENDING: {
+                getSortFunction: function (context) {
+                    context.changeSortState(_sortStates.UNSORTED);
+                    return context.currentSortState.sortFunction;
+                },
+                sortFunction: function (a, b) { return b - a; }
+            }
         };
-        var _columnHeader = function (name) {
+        var _columnHeader = function (name, id) {//TODO: need to be renamed as Column and probably made public.
             this.columnName = name;
+            this.id = id;//TODO: figure out is there is a way to access an index to parent array and use it instead of is property
             this.dataType = _dataTypes.TEXT;
-            this.sortState = _sortStates.UNSORTED;
+            this.currentSortState = _sortStates.UNSORTED;            
+            this.getSortFunction = function () {
+                var sortFunction,
+                    sortStateSortFunction = this.currentSortState.getSortFunction(this);
+
+                if (sortStateSortFunction === null) {
+                    // set sort by row ID
+                    sortFunction = function (a, b) { return a[0] - b[0]; };
+                }
+                else {
+                    var index = this.id;
+                    sortFunction = function (a, b) { return sortStateSortFunction(a[index], b[index]); };
+                }  
+                return sortFunction;
+            };
+            this.changeSortState = function (newState) {
+                this.currentSortState = newState;
+            };
         };
 
         //private functions
@@ -77,8 +113,7 @@
         };
 
         //public properties
-        this.head = [];
-        this.columns = [[]];
+        this.head = [];//need to be renamed as this.columns = [];
         this.rows = [[]];
 
         //public methods
@@ -86,23 +121,36 @@
             _validateInputArray(dataArray);
             this.clear();
             this.rows = new Array(dataArray.length);
-            for (var i = 0; i < this.rows.length; i++) { // В таблице 10 строк
-                this.rows[i] = new Array(dataArray[0].length);            // В каждой строке 10 столбцов
+            for (var i = 0; i < (this.rows.length - 1); i++) {
+                this.rows[i] = new Array((dataArray[0].length + 1));
             }
 
-            for (var columnNumber = 0; columnNumber < dataArray[0].length/*this.head.length*/; columnNumber++) {
+            //adding an ID column
+            for (var idRow = 0; idRow < dataArray.length; idRow++) {
+                if (idRow === 0) {
+                    this.head.push(new _columnHeader("ID", 0));
+                    this.head[0].dataType = _dataTypes.NUMBER;
+                }
+                else {
+                    this.rows[idRow - 1][0] = idRow - 1;
+                }
+            }
 
-                //setting column header
-                this.head.push(new _columnHeader(dataArray[0][columnNumber]));
+            // populating columns
+            // ATTENTION: row&column numeration in the following loop refer to the Table rows and columns, not the dataArray ones.
+            // for dataArray column = columnNumber - 1, row = rowNumber + 1
+            for (var columnNumber = 1; columnNumber <= dataArray[0].length; columnNumber++) {
+                // adding column header
+                this.head.push(new _columnHeader(dataArray[0][columnNumber - 1], columnNumber));
 
-                //defining columns data type
-                for (var rowNumber = 1; rowNumber < dataArray.length; rowNumber++) {
-                    if (rowNumber === 1) {
-                        this.head[columnNumber].dataType = _getDataType(dataArray[rowNumber][columnNumber]);
+                // defining column data type
+                for (var rowNumber = 0; rowNumber < dataArray.length - 1; rowNumber++) {
+                    if (rowNumber === 0) {
+                        this.head[columnNumber].dataType = _getDataType(dataArray[rowNumber + 1][columnNumber - 1]);
                     }
                     else {
                         if (this.head[columnNumber].dataType !== _dataTypes.TEXT) {
-                            var cellDataType = _getDataType(dataArray[rowNumber][columnNumber]);
+                            var cellDataType = _getDataType(dataArray[rowNumber + 1][columnNumber - 1]);
                             if (cellDataType !== this.head[columnNumber].dataType) {
                                 this.head[columnNumber].dataType === _dataTypes.TEXT;
                             }
@@ -114,20 +162,26 @@
                 }
 
                 //populating column
-                for (rowNumber = 1; rowNumber < dataArray.length; rowNumber++) {
-                    var value = dataArray[rowNumber][columnNumber];
+                for (rowNumber = 0; rowNumber < dataArray.length - 1; rowNumber++) {
+                    var value = dataArray[rowNumber + 1][columnNumber - 1];
                     var parsedValue = this.head[columnNumber].dataType.parse(value);
-                    this.rows[rowNumber - 1][columnNumber] = parsedValue;
+                    this.rows[rowNumber][columnNumber] = parsedValue;
                 }
             }
-
         };
         this.clear = function () {
             this.head = [];
             this.rows = [[]];
         };
         this.sort = function (columnNumber) {
-            //TODO
+            //get sort function first
+            var sortFunction = this.head[columnNumber].getSortFunction();
+            for (col in this.head) {
+                if (col !== columnNumber) {
+                    this.head[col].sortState = _sortStates.UNSORTED;
+                }
+            }
+            this.rows.sort(sortFunction);
         };
         this.getHTMLMarkup = function (tableClasses) {
             //TODO: data checks here 
@@ -161,8 +215,6 @@
             html += '</table>';
             return html;
         };
-
-        this.populate(dataArray);
     };
 
     
