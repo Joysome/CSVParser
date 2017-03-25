@@ -6,6 +6,8 @@
 
     var _datePattern = "(((19|20)([2468][048]|[13579][26]|0[48])|2000)[/-]02[/-]29|((19|20)[0-9]{2}[/-](0[4678]|1[02])[/-](0[1-9]|[12][0-9]|30)|(19|20)[0-9]{2}[/-](0[1359]|11)[/-](0[1-9]|[12][0-9]|3[01])|(19|20)[0-9]{2}[/-]02[/-](0[1-9]|1[0-9]|2[0-8])))";
 
+    
+
     this.Table = function () {
 
         //private fields
@@ -34,6 +36,17 @@
                 parse: function (string) {
                     return new Date(string);
                 }
+            },
+            getDataTypeOf: function (value) {
+                if (isNaN(value)) {
+                    if (new RegExp(_datePattern).test(value)) {
+                        return _dataTypes.DATE;
+                    } else {
+                        return _dataTypes.TEXT;
+                    }
+                } else {
+                    return _dataTypes.NUMBER;
+                }
             }
         };
         var _sortStates = {
@@ -52,44 +65,18 @@
         };
         var _columnHeader = function (name, id) {//TODO: need to be renamed as Column and probably made public.
             this.columnName = name;
-            this.id = id;//TODO: figure out is there is a way to access an index to parent array and use it instead of is property
             this.dataType = _dataTypes.TEXT;
             this.currentSortState = _sortStates.UNSORTED;
-            this.getSortFunction = function () {
-                var sortFunction,
-                    sortStateSortFunction,
-                    nextSortState;
+            this.setNextSortState = function () {
                 // change sort state for next if there is one
                 nextSortState = this.currentSortState.getNextSortState();
                 if (nextSortState !== null) {
                     this.currentSortState = nextSortState;
                 }
-                sortStateSortFunction = this.currentSortState.sortFunction;
-                // for UNSORTED state of error case
-                if (sortStateSortFunction === null) {
-                    // set sort by row ID
-                    sortFunction = function (a, b) { return a[0] - b[0]; };
-                }
-                else {
-                    var index = this.id;
-                    sortFunction = function (a, b) { return sortStateSortFunction(a[index], b[index]); };
-                }
-                return sortFunction;
             };
         };
 
         //private functions
-        var _getDataType = function (value) {
-            if (isNaN(value)) {
-                if (new RegExp(_datePattern).test(value)) {
-                    return _dataTypes.DATE;
-                } else {
-                    return _dataTypes.TEXT;
-                }
-            } else {
-                return _dataTypes.NUMBER;
-            }
-        };
         var _validateInputArray = function (inputArray) {
             //TODO: more data checks here
             //TODO: different error types for different catch blocks
@@ -116,14 +103,14 @@
             _validateInputArray(dataArray);
             this.clear();
             this.rows = new Array(dataArray.length);
-            for (var i = 0; i < (this.rows.length - 1) ; i++) {
+            for (var i = 0; i < (this.rows.length - 1); i++) {
                 this.rows[i] = new Array((dataArray[0].length + 1));
             }
 
             //adding an ID column
             for (var idRow = 0; idRow < dataArray.length; idRow++) {
                 if (idRow === 0) {
-                    this.head.push(new _columnHeader("ID", 0));
+                    this.head.push(new _columnHeader("ID"));
                     this.head[0].dataType = _dataTypes.NUMBER;
                 }
                 else {
@@ -136,16 +123,16 @@
             // for dataArray column = columnNumber - 1, row = rowNumber + 1
             for (var columnNumber = 1; columnNumber <= dataArray[0].length; columnNumber++) {
                 // adding column header
-                this.head.push(new _columnHeader(dataArray[0][columnNumber - 1], columnNumber));
+                this.head.push(new _columnHeader(dataArray[0][columnNumber - 1]));
 
                 // defining column data type
                 for (var rowNumber = 0; rowNumber < dataArray.length - 1; rowNumber++) {
                     if (rowNumber === 0) {
-                        this.head[columnNumber].dataType = _getDataType(dataArray[rowNumber + 1][columnNumber - 1]);
+                        this.head[columnNumber].dataType = _dataTypes.getDataTypeOf(dataArray[rowNumber + 1][columnNumber - 1]);
                     }
                     else {
                         if (this.head[columnNumber].dataType !== _dataTypes.TEXT) {
-                            var cellDataType = _getDataType(dataArray[rowNumber + 1][columnNumber - 1]);
+                            var cellDataType = _dataTypes.getDataTypeOf(dataArray[rowNumber + 1][columnNumber - 1]);
                             if (cellDataType !== this.head[columnNumber].dataType) {
                                 this.head[columnNumber].dataType === _dataTypes.TEXT;
                             }
@@ -169,8 +156,26 @@
             this.rows = [[]];
         };
         this.sort = function (columnNumber) {
-            //get sort function first
-            var sortFunction = this.head[columnNumber].getSortFunction();
+            // vars
+            var sortFunction,
+                    sortStateSortFunction,
+                    nextSortState;
+            
+            // set next sort state
+            this.head[columnNumber].setNextSortState();
+
+            // get exact sort function from sort state
+            sortStateSortFunction = this.head[columnNumber].currentSortState.sortFunction;
+
+            // check for UNSORTED state or error case
+            if (sortStateSortFunction === null) {
+                // set sort by row ID (default)
+                sortFunction = function (a, b) { return a[0] - b[0]; };
+            }
+            else {
+                sortFunction = function (a, b) { return sortStateSortFunction(a[columnNumber], b[columnNumber]); };
+            }
+            
             for (col in this.head) {
                 if (col !== columnNumber) {
                     this.head[col].sortState = _sortStates.UNSORTED;
@@ -178,7 +183,7 @@
             }
             this.rows.sort(sortFunction);
         };
-        this.getHTMLMarkup = function (tableClasses) {
+        this.buildHTML = function (tableClasses) {
             //TODO: data checks here 
             //all classes names should be valid strings
             //TODO: as there are multiple data types now, should be a check for column date type
@@ -212,5 +217,20 @@
         };
     };
 
+
+    this.createWidget = function (type) {
+        var _widget;
+
+        switch (type) {
+            case "Table":
+                {
+                    return new this.Table();
+                }
+            default:
+                {
+                    throw "Invalid widget type.";
+                }
+        }
+    };
 
 }).call(Widgets);

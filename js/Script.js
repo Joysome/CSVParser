@@ -8,7 +8,7 @@ else if (window.attachEvent) {
 }
 
 function init() {
-    table = new Widgets.Table();
+    table = Widgets.createWidget("Table");
 
     var e = document.getElementById("generate-button");
     if (e.addEventListener) {
@@ -25,5 +25,5 @@ function getTableHTML() {
     table.populate(parsedDataArray);
     table.sort(2);
     var tableContainer = document.getElementById("table-container");
-    tableContainer.innerHTML = table.getHTMLMarkup("table");
+    tableContainer.innerHTML = table.buildHTML("table");
 }
