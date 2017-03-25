@@ -3,7 +3,7 @@
 }
 
 (function () {
-    
+
     var _datePattern = "(((19|20)([2468][048]|[13579][26]|0[48])|2000)[/-]02[/-]29|((19|20)[0-9]{2}[/-](0[4678]|1[02])[/-](0[1-9]|[12][0-9]|30)|(19|20)[0-9]{2}[/-](0[1359]|11)[/-](0[1-9]|[12][0-9]|3[01])|(19|20)[0-9]{2}[/-]02[/-](0[1-9]|1[0-9]|2[0-8])))";
 
     this.Table = function () {
@@ -38,24 +38,15 @@
         };
         var _sortStates = {
             UNSORTED: {
-                getSortFunction: function (context) {
-                    context.changeSortState(_sortStates.ASCENDING);
-                    return context.currentSortState.sortFunction;
-                },
+                getNextSortState: function () { return _sortStates.ASCENDING; },
                 sortFunction: null
             },
             ASCENDING: {
-                getSortFunction: function (context) {
-                    context.changeSortState(_sortStates.DESCENDING);
-                    return context.currentSortState.sortFunction;
-                },
+                getNextSortState: function () { return _sortStates.DESCENDING; },
                 sortFunction: function (a, b) { return a - b; }
             },
             DESCENDING: {
-                getSortFunction: function (context) {
-                    context.changeSortState(_sortStates.UNSORTED);
-                    return context.currentSortState.sortFunction;
-                },
+                getNextSortState: function () { return _sortStates.UNSORTED; },
                 sortFunction: function (a, b) { return b - a; }
             }
         };
@@ -63,11 +54,18 @@
             this.columnName = name;
             this.id = id;//TODO: figure out is there is a way to access an index to parent array and use it instead of is property
             this.dataType = _dataTypes.TEXT;
-            this.currentSortState = _sortStates.UNSORTED;            
+            this.currentSortState = _sortStates.UNSORTED;
             this.getSortFunction = function () {
                 var sortFunction,
-                    sortStateSortFunction = this.currentSortState.getSortFunction(this);
-
+                    sortStateSortFunction,
+                    nextSortState;
+                // change sort state for next if there is one
+                nextSortState = this.currentSortState.getNextSortState();
+                if (nextSortState !== null) {
+                    this.currentSortState = nextSortState;
+                }
+                sortStateSortFunction = this.currentSortState.sortFunction;
+                // for UNSORTED state of error case
                 if (sortStateSortFunction === null) {
                     // set sort by row ID
                     sortFunction = function (a, b) { return a[0] - b[0]; };
@@ -75,11 +73,8 @@
                 else {
                     var index = this.id;
                     sortFunction = function (a, b) { return sortStateSortFunction(a[index], b[index]); };
-                }  
+                }
                 return sortFunction;
-            };
-            this.changeSortState = function (newState) {
-                this.currentSortState = newState;
             };
         };
 
@@ -121,7 +116,7 @@
             _validateInputArray(dataArray);
             this.clear();
             this.rows = new Array(dataArray.length);
-            for (var i = 0; i < (this.rows.length - 1); i++) {
+            for (var i = 0; i < (this.rows.length - 1) ; i++) {
                 this.rows[i] = new Array((dataArray[0].length + 1));
             }
 
@@ -217,5 +212,5 @@
         };
     };
 
-    
+
 }).call(Widgets);
