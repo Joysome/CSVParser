@@ -1,0 +1,41 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="css/reset.css">
+    <link rel="stylesheet" href="css/style.css">
+    <link href="css/bootstrap-theme.css" rel="stylesheet" />
+    <link href="css/bootstrap.css" rel="stylesheet" />
+    <script src="js/Script.js"></script>
+    <script src="js/CSVParser.js" defer></script>
+    <script src="js/Widgets.js"></script>
+    <title>CSV to table</title>
+</head>
+<body>
+    <div class="container">
+        <div class="page-header">
+            <h1>
+                Table generation from CSV data format
+            </h1>
+        </div>
+        <div class="row">
+            <div class="panel col-md-10 col-md-offset-1">
+                <div class="form-group">
+                    <label for="csv-input">Enter your CSV here:</label>
+                    <textarea class="form-control" rows="4" cols="50" id="csv-input">
+                        Year,Make,Model
+                        1997,Ford,E350
+                        2000,Mercury,Cougar
+                    </textarea><!--TEST-->
+                </div>
+                <div class="form-group">
+                    <button class="btn btn-primary" id="generate-button">Generate</button>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-10 col-md-offset-1" id="table-container"></div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
