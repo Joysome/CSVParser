@@ -1,0 +1,6 @@
+th.header-sort-ascending:before {
+    content: '\25B2';
+}
+th.header-sort-descending:before {
+    content: '\25BC';
+}
