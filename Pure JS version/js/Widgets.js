@@ -86,7 +86,7 @@
             if (inputArray === null) {
                 throw new Error("Data array for populating table shouldn't be null.");
             }
-            if (inputArray.length <= 2) {
+            if (inputArray.length < 2) {
                 throw new Error("Table should contain a header and at least one row.");
             }
             var colCount = inputArray[0].length;
@@ -237,7 +237,7 @@
                 }
             default:
                 {
-                    throw "Invalid widget type.";
+                    throw new Error("Invalid widget type.");
                 }
         }
     };

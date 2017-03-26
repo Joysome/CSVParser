@@ -2,7 +2,6 @@
     CSVParser = {};
 }    
 
-//begin private closure
 (function () {
 
     //var _patternBeforeNonQuoted = "(?<=^|\,)";//TODO: need to fix lookbehind
@@ -15,41 +14,69 @@
     //var _patternQuotedComplete = _patternBeforeQuoted + _patternQuoted + _pattenrAfterQuoted;
     //var _patternComplete = "(" + _patternNonQuotedComplete + "|" + _patternQuotedComplete + ")";
 
-    //This function should return a [[]] array or null for error. It should be a facade for verifying and parsing actions.
+    
     this.parse = function (string) {
-        //var res;
-        //var pattern = _patternComplete;
-        //var regex = new RegExp(pattern, "g");
-        //try{
-        //    while ((res = regex.exec(string)) !== null) {
-        //        //infinite loop fix
-        //        if (res.index === regex.lastIndex) {
-        //            regex.lastIndex++;
-        //        }
-        //        alert("Found " + res + " at index " + res.index +
-        //        ".\nNext symbol index: " + pattern.lastIndex);//test
-        //    };
-        //}
-        //catch (err) {
-        //    return null;
-        //}     
 
-        //just a mock here for now
-        var resArrayTest = [
-            [
-                "Text", "Numbers", "Date"
-            ],
-            [
-                "ABText", 324, "2015-03-25"
-            ],
-            [
-                "ACText", 186, "2010-08-02"
-            ],
-            [
-                "SomeOtherText", 1829247, "2015-10-12"
-            ]
-        ];
-        return resArrayTest;
+        //for ie compatibility should replace '\r\n' to '\n' in the input string first
+
+        var checkStartPosition = 0,
+            quotesFlag = false,
+            resArray = [new Array()],
+            resArrayRowsCounter = 0;
+
+        for (var i = 0; i < string.length; i++) {
+
+            if (string[i] === '"') {
+                if (quotesFlag == false) {
+                    if (i === 0 || string[i - 1] == ',' || string[i - 1] == '\n') {
+                        quotesFlag = true;
+                        checkStartPosition = i + 1;
+                    }
+                    else {
+                        throw new Error("A symbol \'" + string[i] + "\' detected inside the value without being quoted.");
+                    }
+                }
+                else {
+                    if (string[i + 1] == ',' || string[i + 1] == '\n' || i === string.length - 1) {
+                        resArray[resArrayRowsCounter].push(string.slice(checkStartPosition, i));
+                        checkStartPosition = i + 1;
+                        quotesFlag = false;
+                    }
+                    else {
+                        continue;
+                    }
+                }
+            }
+            else if (string[i] === ',' && quotesFlag !== true) {
+                if (i === 0) {
+                    resArray[resArrayRowsCounter].push("");
+                }
+                else if (string[i - 1] !== '"') {
+                    resArray[resArrayRowsCounter].push(string.slice(checkStartPosition, i));
+                    if (i === string.length - 1 || string[i + 1] === '\n') {
+                        resArray[resArrayRowsCounter].push("");
+                    }
+                }
+                checkStartPosition = i + 1;
+            }
+            else if (string[i] === '\n' && quotesFlag !== true && i !== string.length - 1) {
+                if (i !== 0) {
+                    resArray[resArrayRowsCounter].push(string.slice(checkStartPosition, i));
+                }
+                checkStartPosition = i + 1;
+                resArray.push(new Array());
+                resArrayRowsCounter += 1;
+            }
+
+            if (i === string.length - 1) {
+                if (quotesFlag === true) {
+                    throw new Error("Unclosed quotes detected.");
+                }
+                resArray[resArrayRowsCounter].push(string.slice(checkStartPosition, i + 1));
+            }
+        }
+
+        return resArray;
     };
 
 }).call(CSVParser);

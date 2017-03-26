@@ -51,16 +51,19 @@
         };
         var _sortStates = {
             UNSORTED: {
-                getNextSortState: function () { return _sortStates.ASCENDING; },
-                sortFunction: null
+                getNextSortState: function () { return _sortStates.DESCENDING; },
+                sortFunction: null,
+                sortClass: null
             },
             ASCENDING: {
-                getNextSortState: function () { return _sortStates.DESCENDING; },
-                sortFunction: function (a, b) { return a - b; }
+                getNextSortState: function () { return _sortStates.UNSORTED; },
+                sortFunction: function (a, b) { return a - b; },
+                sortClass: "header-sort-ascending"
             },
             DESCENDING: {
-                getNextSortState: function () { return _sortStates.UNSORTED; },
-                sortFunction: function (a, b) { return b - a; }
+                getNextSortState: function () { return _sortStates.ASCENDING; },
+                sortFunction: function (a, b) { return b - a; },
+                sortClass: "header-sort-descending"
             }
         };
         var _columnHeader = function (name, id) {//TODO: need to be renamed as Column and probably made public.
@@ -175,13 +178,14 @@
             else {
                 sortFunction = function (a, b) { return sortStateSortFunction(a[columnNumber], b[columnNumber]); };
             }
-            
-            for (col in this.head) {
+
+            this.rows.sort(sortFunction);
+
+            for (var col = 0; col < this.head.length; col++) {
                 if (col !== columnNumber) {
-                    this.head[col].sortState = _sortStates.UNSORTED;
+                    this.head[col].currentSortState = _sortStates.UNSORTED;
                 }
             }
-            this.rows.sort(sortFunction);
         };
         this.buildHTML = function (tableClasses) {
             //TODO: data checks here 
@@ -189,11 +193,16 @@
             //TODO: as there are multiple data types now, should be a check for column date type
             //this.validate();//???
 
-            var html = '<table class="' + tableClasses + '">';
+            var html = '<table id="CSVTable" class="' + tableClasses + '">';
             html += '<thead>';
             html += '<tr>';
             for (columnHeader in this.head) {
-                html += '<th>';
+                html += '<th';
+                var sortClass = this.head[columnHeader].currentSortState.sortClass;
+                if (sortClass !== null) {
+                    html += ' class = "' + sortClass + '" ';
+                }
+                html += '>';
                 html += this.head[columnHeader].columnName;
                 html += '</th>';
             }
