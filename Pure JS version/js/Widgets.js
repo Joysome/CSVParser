@@ -7,7 +7,6 @@
     var _datePattern = "(((19|20)([2468][048]|[13579][26]|0[48])|2000)[/-]02[/-]29|((19|20)[0-9]{2}[/-](0[4678]|1[02])[/-](0[1-9]|[12][0-9]|30)|(19|20)[0-9]{2}[/-](0[1359]|11)[/-](0[1-9]|[12][0-9]|3[01])|(19|20)[0-9]{2}[/-]02[/-](0[1-9]|1[0-9]|2[0-8])))";
 
     
-
     this.Table = function () {
 
         //private fields
@@ -57,12 +56,12 @@
             },
             ASCENDING: {
                 getNextSortState: function () { return _sortStates.UNSORTED; },
-                sortFunction: function (a, b) { return a - b; },
+                sortFunction: function (a, b) { return a > b; },
                 sortClass: "header-sort-ascending"
             },
             DESCENDING: {
                 getNextSortState: function () { return _sortStates.ASCENDING; },
-                sortFunction: function (a, b) { return b - a; },
+                sortFunction: function (a, b) { return b > a; },
                 sortClass: "header-sort-descending"
             }
         };
@@ -81,8 +80,6 @@
 
         //private functions
         var _validateInputArray = function (inputArray) {
-            //TODO: more data checks here
-            //TODO: different error types for different catch blocks
             if (inputArray === null) {
                 throw new Error("Data array for populating table shouldn't be null.");
             }
@@ -98,7 +95,7 @@
         };
 
         //public properties
-        this.head = [];//need to be renamed as this.columns = [];
+        this.columns = [];//need to be renamed as this.columns = [];
         this.rows = [[]];
 
         //public methods
@@ -113,8 +110,8 @@
             //adding an ID column
             for (var idRow = 0; idRow < dataArray.length; idRow++) {
                 if (idRow === 0) {
-                    this.head.push(new _columnHeader("ID"));
-                    this.head[0].dataType = _dataTypes.NUMBER;
+                    this.columns.push(new _columnHeader("ID"));
+                    this.columns[0].dataType = _dataTypes.NUMBER;
                 }
                 else {
                     this.rows[idRow - 1][0] = idRow - 1;
@@ -126,18 +123,18 @@
             // for dataArray column = columnNumber - 1, row = rowNumber + 1
             for (var columnNumber = 1; columnNumber <= dataArray[0].length; columnNumber++) {
                 // adding column header
-                this.head.push(new _columnHeader(dataArray[0][columnNumber - 1]));
+                this.columns.push(new _columnHeader(dataArray[0][columnNumber - 1]));
 
                 // defining column data type
                 for (var rowNumber = 0; rowNumber < dataArray.length - 1; rowNumber++) {
                     if (rowNumber === 0) {
-                        this.head[columnNumber].dataType = _dataTypes.getDataTypeOf(dataArray[rowNumber + 1][columnNumber - 1]);
+                        this.columns[columnNumber].dataType = _dataTypes.getDataTypeOf(dataArray[rowNumber + 1][columnNumber - 1]);
                     }
                     else {
-                        if (this.head[columnNumber].dataType !== _dataTypes.TEXT) {
+                        if (this.columns[columnNumber].dataType !== _dataTypes.TEXT) {
                             var cellDataType = _dataTypes.getDataTypeOf(dataArray[rowNumber + 1][columnNumber - 1]);
-                            if (cellDataType !== this.head[columnNumber].dataType) {
-                                this.head[columnNumber].dataType === _dataTypes.TEXT;
+                            if (cellDataType !== this.columns[columnNumber].dataType) {
+                                this.columns[columnNumber].dataType === _dataTypes.TEXT;
                             }
                         }
                         else {
@@ -149,13 +146,13 @@
                 //populating column
                 for (rowNumber = 0; rowNumber < dataArray.length - 1; rowNumber++) {
                     var value = dataArray[rowNumber + 1][columnNumber - 1];
-                    var parsedValue = this.head[columnNumber].dataType.parse(value);
+                    var parsedValue = this.columns[columnNumber].dataType.parse(value);
                     this.rows[rowNumber][columnNumber] = parsedValue;
                 }
             }
         };
         this.clear = function () {
-            this.head = [];
+            this.columns = [];
             this.rows = [[]];
         };
         this.sort = function (columnNumber) {
@@ -165,10 +162,10 @@
                     nextSortState;
             
             // set next sort state
-            this.head[columnNumber].setNextSortState();
+            this.columns[columnNumber].setNextSortState();
 
             // get exact sort function from sort state
-            sortStateSortFunction = this.head[columnNumber].currentSortState.sortFunction;
+            sortStateSortFunction = this.columns[columnNumber].currentSortState.sortFunction;
 
             // check for UNSORTED state or error case
             if (sortStateSortFunction === null) {
@@ -181,29 +178,27 @@
 
             this.rows.sort(sortFunction);
 
-            for (var col = 0; col < this.head.length; col++) {
+            for (var col = 0; col < this.columns.length; col++) {
                 if (col !== columnNumber) {
-                    this.head[col].currentSortState = _sortStates.UNSORTED;
+                    this.columns[col].currentSortState = _sortStates.UNSORTED;
                 }
             }
         };
         this.buildHTML = function (tableClasses) {
             //TODO: data checks here 
             //all classes names should be valid strings
-            //TODO: as there are multiple data types now, should be a check for column date type
-            //this.validate();//???
 
             var html = '<table id="CSVTable" class="' + tableClasses + '">';
             html += '<thead>';
             html += '<tr>';
-            for (columnHeader in this.head) {
+            for (columnHeader in this.columns) {
                 html += '<th';
-                var sortClass = this.head[columnHeader].currentSortState.sortClass;
+                var sortClass = this.columns[columnHeader].currentSortState.sortClass;
                 if (sortClass !== null) {
                     html += ' class = "' + sortClass + '" ';
                 }
                 html += '>';
-                html += this.head[columnHeader].columnName;
+                html += this.columns[columnHeader].columnName;
                 html += '</th>';
             }
             html += '</tr>';
@@ -213,7 +208,7 @@
                 html += '<tr>';
                 for (cell in this.rows[row]) {
                     html += '<td>';
-                    var outputString = this.head[cell].dataType
+                    var outputString = this.columns[cell].dataType
                         .toString(this.rows[row][cell]);
                     html += outputString;
                     html += '</td>';

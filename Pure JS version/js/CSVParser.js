@@ -4,20 +4,30 @@
 
 (function () {
 
-    //var _patternBeforeNonQuoted = "(?<=^|\,)";//TODO: need to fix lookbehind
-    //var _patternBeforeQuoted = "(?<=(?<=^|\,)\")";//TODO: need to fix lookbehind
-    //var _patternAfterNonQuoted = "(?=\,|$)";
-    //var _pattenrAfterQuoted = "(?=\"{1}(?=\,|$))";
-    //var _patternNonQuoted = "(?:[^\,\"\r\n])*";
-    //var _patternQuoted = "(?:[^\"]|\"(?!(\,|$)))*";
-    //var _patternNonQuotedComplete = _patternBeforeNonQuoted + _patternNonQuoted + _pattenrAfterNonQuoted;
-    //var _patternQuotedComplete = _patternBeforeQuoted + _patternQuoted + _pattenrAfterQuoted;
-    //var _patternComplete = "(" + _patternNonQuotedComplete + "|" + _patternQuotedComplete + ")";
+    this.itemsDelimiterChar;
+    this.newLineChar;
+    this.qChar;
 
-    
-    this.parse = function (string) {
+    this.parse = function (string, delimiterChar, newLineChar, qchar) {
+        switch (arguments.length) {
+            case 1: this.itemsDelimiterChar = ',';
+            case 2: this.newLineChar = '\n';
+            case 3: this.qChar = '"';
+            case 4: break;
+            default: throw new Error('No csv string passed.')
+        }
+        if (delimiterChar === undefined) {
+            y = 0;
+        }
+        if (newLineChar === undefined) {
+            y = 0;
+        }
+        if (qchar === undefined) {
+            y = 0;
+        }
 
-        //for ie compatibility should replace '\r\n' to '\n' in the input string first
+        //for ie compatibility should replace '\r\n' to '\n' in the input string first 
+        string.replace(/\\r\\n/, this.newLineChar);;
 
         var checkStartPosition = 0,
             quotesFlag = false,
@@ -26,9 +36,9 @@
 
         for (var i = 0; i < string.length; i++) {
 
-            if (string[i] === '"') {
+            if (string[i] === this.qChar) {
                 if (quotesFlag == false) {
-                    if (i === 0 || string[i - 1] == ',' || string[i - 1] == '\n') {
+                    if (i === 0 || string[i - 1] == this.itemsDelimiterChar || string[i - 1] == this.newLineChar) {
                         quotesFlag = true;
                         checkStartPosition = i + 1;
                     }
@@ -37,7 +47,7 @@
                     }
                 }
                 else {
-                    if (string[i + 1] == ',' || string[i + 1] == '\n' || i === string.length - 1) {
+                    if (string[i + 1] == this.itemsDelimiterChar || string[i + 1] == this.newLineChar || i === string.length - 1) {
                         resArray[resArrayRowsCounter].push(string.slice(checkStartPosition, i));
                         checkStartPosition = i + 1;
                         quotesFlag = false;
@@ -47,19 +57,19 @@
                     }
                 }
             }
-            else if (string[i] === ',' && quotesFlag !== true) {
+            else if (string[i] === this.itemsDelimiterChar && quotesFlag !== true) {
                 if (i === 0) {
                     resArray[resArrayRowsCounter].push("");
                 }
-                else if (string[i - 1] !== '"') {
+                else if (string[i - 1] !== this.qChar) {
                     resArray[resArrayRowsCounter].push(string.slice(checkStartPosition, i));
-                    if (i === string.length - 1 || string[i + 1] === '\n') {
+                    if (i === string.length - 1 || string[i + 1] === this.newLineChar) {
                         resArray[resArrayRowsCounter].push("");
                     }
                 }
                 checkStartPosition = i + 1;
             }
-            else if (string[i] === '\n' && quotesFlag !== true && i !== string.length - 1) {
+            else if (string[i] === this.newLineChar && quotesFlag !== true && i !== string.length - 1) {
                 if (i !== 0) {
                     resArray[resArrayRowsCounter].push(string.slice(checkStartPosition, i));
                 }
