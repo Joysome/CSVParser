@@ -16,18 +16,8 @@
             case 4: break;
             default: throw new Error('No csv string passed.')
         }
-        if (delimiterChar === undefined) {
-            y = 0;
-        }
-        if (newLineChar === undefined) {
-            y = 0;
-        }
-        if (qchar === undefined) {
-            y = 0;
-        }
 
-        //for ie compatibility should replace '\r\n' to '\n' in the input string first 
-        string.replace(/\\r\\n/, this.newLineChar);;
+        string.replace(/\\r\\n/, this.newLineChar);
 
         var checkStartPosition = 0,
             quotesFlag = false,
