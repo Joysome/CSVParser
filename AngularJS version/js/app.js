@@ -11,5 +11,14 @@ csvParserApp.controller("CSVParserCtrl", function ($scope) {
         $scope.table.populate(CSVParser.parse($scope.input));
         $scope.showTable = true;
     };
+
+    $scope.onInputChanged = function (input) {
+        if ($scope.showTable) {
+            $scope.parseCSV();
+        }
+    }
+
     $scope.showTable = false;
+
+    $scope.showError = false;
 });

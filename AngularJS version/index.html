@@ -24,8 +24,7 @@
                 <div class="panel col-md-10 col-md-offset-1">
                     <div class="form-group">
                         <label for="csv-input">Enter your CSV here:</label>
-                        <textarea class="form-control" rows="4" cols="50" id="csv-input" ng-model="input">
-                        </textarea><!--TEST-->
+                        <textarea class="form-control" rows="4" cols="50" ng-model="input" ng-model-options="{ updateOn: 'blur' }" ng-change="onInputChanged(this)"></textarea><!--TEST-->
                     </div>
                     <div class="form-group">
                         <button class="btn btn-primary" ng-click="parseCSV()">Generate</button>
@@ -37,7 +36,7 @@
                     <table class="table table-striped">
                         <thead>
                             <tr>
-                                <th ng-repeat="col in table.head">{{col.columnName}}</th>
+                                <th ng-repeat="col in table.columns">{{col.columnName}}</th>
                             </tr>
                         </thead>
                         <tbody>

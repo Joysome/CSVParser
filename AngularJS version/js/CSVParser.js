@@ -2,54 +2,91 @@
     CSVParser = {};
 }    
 
-//begin private closure
 (function () {
 
-    //var _patternBeforeNonQuoted = "(?<=^|\,)";//TODO: need to fix lookbehind
-    //var _patternBeforeQuoted = "(?<=(?<=^|\,)\")";//TODO: need to fix lookbehind
-    //var _patternAfterNonQuoted = "(?=\,|$)";
-    //var _pattenrAfterQuoted = "(?=\"{1}(?=\,|$))";
-    //var _patternNonQuoted = "(?:[^\,\"\r\n])*";
-    //var _patternQuoted = "(?:[^\"]|\"(?!(\,|$)))*";
-    //var _patternNonQuotedComplete = _patternBeforeNonQuoted + _patternNonQuoted + _pattenrAfterNonQuoted;
-    //var _patternQuotedComplete = _patternBeforeQuoted + _patternQuoted + _pattenrAfterQuoted;
-    //var _patternComplete = "(" + _patternNonQuotedComplete + "|" + _patternQuotedComplete + ")";
+    this.itemsDelimiterChar;
+    this.newLineChar;
+    this.qChar;
 
-    //This function should return a [[]] array or null for error. It should be a facade for verifying and parsing actions.
-    this.parse = function (string) {
-        //var res;
-        //var pattern = _patternComplete;
-        //var regex = new RegExp(pattern, "g");
-        //try{
-        //    while ((res = regex.exec(string)) !== null) {
-        //        //infinite loop fix
-        //        if (res.index === regex.lastIndex) {
-        //            regex.lastIndex++;
-        //        }
-        //        alert("Found " + res + " at index " + res.index +
-        //        ".\nNext symbol index: " + pattern.lastIndex);//test
-        //    };
-        //}
-        //catch (err) {
-        //    return null;
-        //}     
+    this.parse = function (string, delimiterChar, newLineChar, qchar) {
+        switch (arguments.length) {
+            case 1: this.itemsDelimiterChar = ',';
+            case 2: this.newLineChar = '\n';
+            case 3: this.qChar = '"';
+            case 4: break;
+            default: throw new Error('No csv string passed.')
+        }
+        if (delimiterChar === undefined) {
+            y = 0;
+        }
+        if (newLineChar === undefined) {
+            y = 0;
+        }
+        if (qchar === undefined) {
+            y = 0;
+        }
 
-        //just a mock here for now
-        var resArrayTest = [
-            [
-                "Text", "Numbers", "Date"
-            ],
-            [
-                "ABText", 324, "2015-03-25"
-            ],
-            [
-                "ACText", 186, "2010-08-02"
-            ],
-            [
-                "SomeOtherText", 1829247, "2015-10-12"
-            ]
-        ];
-        return resArrayTest;
+        //for ie compatibility should replace '\r\n' to '\n' in the input string first 
+        string.replace(/\\r\\n/, this.newLineChar);;
+
+        var checkStartPosition = 0,
+            quotesFlag = false,
+            resArray = [new Array()],
+            resArrayRowsCounter = 0;
+
+        for (var i = 0; i < string.length; i++) {
+
+            if (string[i] === this.qChar) {
+                if (quotesFlag == false) {
+                    if (i === 0 || string[i - 1] == this.itemsDelimiterChar || string[i - 1] == this.newLineChar) {
+                        quotesFlag = true;
+                        checkStartPosition = i + 1;
+                    }
+                    else {
+                        throw new Error("A symbol \'" + string[i] + "\' detected inside the value without being quoted.");
+                    }
+                }
+                else {
+                    if (string[i + 1] == this.itemsDelimiterChar || string[i + 1] == this.newLineChar || i === string.length - 1) {
+                        resArray[resArrayRowsCounter].push(string.slice(checkStartPosition, i));
+                        checkStartPosition = i + 1;
+                        quotesFlag = false;
+                    }
+                    else {
+                        continue;
+                    }
+                }
+            }
+            else if (string[i] === this.itemsDelimiterChar && quotesFlag !== true) {
+                if (i === 0) {
+                    resArray[resArrayRowsCounter].push("");
+                }
+                else if (string[i - 1] !== this.qChar) {
+                    resArray[resArrayRowsCounter].push(string.slice(checkStartPosition, i));
+                    if (i === string.length - 1 || string[i + 1] === this.newLineChar) {
+                        resArray[resArrayRowsCounter].push("");
+                    }
+                }
+                checkStartPosition = i + 1;
+            }
+            else if (string[i] === this.newLineChar && quotesFlag !== true && i !== string.length - 1) {
+                if (i !== 0) {
+                    resArray[resArrayRowsCounter].push(string.slice(checkStartPosition, i));
+                }
+                checkStartPosition = i + 1;
+                resArray.push(new Array());
+                resArrayRowsCounter += 1;
+            }
+
+            if (i === string.length - 1 && string[i] !== '"') {
+                if (quotesFlag === true) {
+                    throw new Error("Unclosed quotes detected.");
+                }
+                resArray[resArrayRowsCounter].push(string.slice(checkStartPosition, i + 1));
+            }
+        }
+
+        return resArray;
     };
 
 }).call(CSVParser);

@@ -78,7 +78,7 @@
                 resArrayRowsCounter += 1;
             }
 
-            if (i === string.length - 1) {
+            if (i === string.length - 1 && string[i] !== '"') {
                 if (quotesFlag === true) {
                     throw new Error("Unclosed quotes detected.");
                 }

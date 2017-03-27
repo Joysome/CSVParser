@@ -13,7 +13,7 @@
         var _dataTypes = {
             TEXT: {
                 toString: function (value) {
-                    return value;
+                    return value.replace("\n", "<br />");
                 },
                 parse: function (string) {
                     return string;
