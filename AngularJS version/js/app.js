@@ -1,23 +1,25 @@
-﻿angular.module("csvParserApp", ["csvServices"])
+﻿angular.module("csvParserApp", ["csvServices", "simpleTable"])
 //.config(function (csvParserServiceProvider) {
 //    csvParserServiceProvider.setDelimiter(',').setNewLine('\n').setQuote('"');
 //})
 .controller("CSVParserCtrl", function ($scope, csvParserService) {
 
-    $scope.table = Widgets.createWidget("Table");
+    $scope.parsedArray = new Array();
+
+    $scope.input;
 
     $scope.parseCSV = function () {
-        $scope.table.populate(csvParserService.parse($scope.input));
+        var testtmp = csvParserService.parse($scope.input);
+        $scope.parsedArray.length = 0;
+        $scope.parsedArray.push.apply($scope.parsedArray, testtmp);
         $scope.showTable = true;
     };
 
     $scope.onInputChanged = function (input) {
         if ($scope.showTable) {
             $scope.parseCSV();
-        } 
+        }
     }
 
     $scope.showTable = false;
-
-    $scope.showError = false;
 });
