@@ -5,7 +5,7 @@
 (function () {
 
     var _datePattern = "(((19|20)([2468][048]|[13579][26]|0[48])|2000)[/-]02[/-]29|((19|20)[0-9]{2}[/-](0[4678]|1[02])[/-](0[1-9]|[12][0-9]|30)|(19|20)[0-9]{2}[/-](0[1359]|11)[/-](0[1-9]|[12][0-9]|3[01])|(19|20)[0-9]{2}[/-]02[/-](0[1-9]|1[0-9]|2[0-8])))";
-
+    var _classPattern = "^([A-Za-z_][A-Za-z\d_-]*)+( [A-Za-z_][A-Za-z\d_-]*)*$";
     
     this.Table = function () {
 
@@ -65,7 +65,7 @@
                 sortClass: "header-sort-descending"
             }
         };
-        var _columnHeader = function (name, id) {//TODO: need to be renamed as Column and probably made public.
+        var _columnHeader = function (name, id) {
             this.columnName = name;
             this.dataType = _dataTypes.TEXT;
             this.currentSortState = _sortStates.UNSORTED;
@@ -162,6 +162,11 @@
             this.rows.length = 0;
         };
         this.sort = function (columnNumber) {
+
+            if (isNaN(columnNumber) || columnNumber < 0 || columnNumber >= this.columns.length) {
+                throw new Error("Invalid column number to sort.");
+            }
+
             // vars
             var sortFunction,
                     sortStateSortFunction,
@@ -191,8 +196,10 @@
             }
         };
         this.buildHTML = function (tableClasses) {
-            //TODO: data checks here 
-            //all classes names should be valid strings
+
+            if (tableClasses === undefined || !(new RegExp(_classPattern).test(tableClasses))) {
+                throw new Error("Invalid table class name.");
+            }
 
             var html = '<table id="CSVTable" class="' + tableClasses + '">';
             html += '<thead>';

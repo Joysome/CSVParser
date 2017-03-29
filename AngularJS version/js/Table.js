@@ -1,11 +1,10 @@
-﻿
-angular.module("simpleTable", [])
-.directive("sTable", function () {
+﻿(function () {
 
-    var controller = ['$scope', function ($scope) {
+    var controller = function ($scope) {
 
         //table
         var _datePattern = "(((19|20)([2468][048]|[13579][26]|0[48])|2000)[/-]02[/-]29|((19|20)[0-9]{2}[/-](0[4678]|1[02])[/-](0[1-9]|[12][0-9]|30)|(19|20)[0-9]{2}[/-](0[1359]|11)[/-](0[1-9]|[12][0-9]|3[01])|(19|20)[0-9]{2}[/-]02[/-](0[1-9]|1[0-9]|2[0-8])))";
+        var _classPattern = "^([A-Za-z_][A-Za-z\d_-]*)+( [A-Za-z_][A-Za-z\d_-]*)*$";
 
         $scope.errorMessage = null;
 
@@ -97,8 +96,12 @@ angular.module("simpleTable", [])
                     }
                 }
             }
-            return true;
         };
+        var _validateCSSClassName = function (cssClassName) {
+            if (cssClassName === undefined || !(new RegExp(_classPattern).test(cssClassName))) {
+                throw new Error("Invalid table class name.");
+            }
+        }
         var _clear = function () {
             $scope.columns.length = 0;
             $scope.rows.length = 0;
@@ -110,7 +113,6 @@ angular.module("simpleTable", [])
 
         //public methods
         $scope.populate = function (dataArray) {
-            _validateInputArray(dataArray);
             _clear();
             $scope.rows = new Array(dataArray.length);
             for (var i = 0; i < ($scope.rows.length - 1) ; i++) {
@@ -162,6 +164,11 @@ angular.module("simpleTable", [])
             }
         };
         $scope.sort = function (columnNumber) {
+
+            if (isNaN(columnNumber) || columnNumber < 0 || columnNumber >= $scope.columns.length) {
+                throw new Error("Invalid column number to sort.");
+            }
+
             // vars
             var sortFunction,
                     sortStateSortFunction,
@@ -203,11 +210,17 @@ angular.module("simpleTable", [])
         };
 
 
-        $scope.$watch('datasource', function (neww, old) {
+        $scope.$watch('datasource', function (newValue, oldValue) {
             $scope.errorMessage = null;
             try {
-                if (angular.isArray(neww) && neww.length !== 0)
+                if (newValue === newValue && angular.isArray(newValue) && newValue.length !== 0) {
+                    _validateInputArray(newValue);
+                    _validateCSSClassName($scope.mainTableClass);
+                    _validateCSSClassName($scope.exceptionClass);
+
                     $scope.populate($scope.datasource);
+                }
+                    
             }
             catch (e) {
                 $scope.errorMessage = e.message;
@@ -223,16 +236,25 @@ angular.module("simpleTable", [])
                 return "./directiveTemplates/errorTemplate.html";
             }
         };
-    }];
-    return {
-        template: '<ng-include src="getTemplateUrl()"/>',
-        scope: {
-            datasource: "=",
-            mainTableClass: "@tabStyle",
-            exceptionClass: "@errStyle"
-        },
-        restrict: 'E',
-        controller: controller,
-        replace: true
+    }
+
+    controller.$inject = ['$scope'];
+
+    var simpleTable = function () {
+        return {
+            template: '<ng-include src="getTemplateUrl()"/>',
+            scope: {
+                datasource: "=",
+                mainTableClass: "@tabStyle",
+                exceptionClass: "@errStyle"
+            },
+            restrict: 'E',
+            controller: controller,
+            replace: true
+        };
     };
-});
+
+    angular.module("simpleTable", [])
+        .directive("sTable", simpleTable);
+
+}());
