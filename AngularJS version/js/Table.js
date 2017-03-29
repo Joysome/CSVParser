@@ -108,7 +108,7 @@
         };
 
         //public properties
-        $scope.columns = [];//need to be renamed as $scope.columns = [];
+        $scope.columns = [];
         $scope.rows = [[]];
 
         //public methods
@@ -132,7 +132,7 @@
 
             // populating columns
             // ATTENTION: row&column numeration in the following loop refer to the Table rows and columns, not the dataArray ones.
-            // for dataArray column = columnNumber - 1, row = rowNumber + 1
+            // for dataArray: column = columnNumber - 1, row = rowNumber + 1
             for (var columnNumber = 1; columnNumber <= dataArray[0].length; columnNumber++) {
                 // adding column header
                 $scope.columns.push(new _columnHeader(dataArray[0][columnNumber - 1]));

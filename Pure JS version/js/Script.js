@@ -58,7 +58,7 @@ function drawTable() {
         outputHTML = table.buildHTML("table");
         outputContainer.innerHTML = outputHTML;
 
-        var CSVtable = document.getElementById("CSVTable");//tableContainer.children[0]
+        var CSVtable = document.getElementById("CSVTable");
         if (CSVtable !== null) {
             for (var i = 0; i < CSVtable.rows[0].cells.length; i++) {
                 var col = CSVtable.rows[0].cells[i];
@@ -85,5 +85,4 @@ function drawTable() {
 
 function showError(message) {
     outputContainer.innerHTML = "<p class=\"alert alert-danger\">" + message + "</p>";
-    //isTableDrawn = false;
 }
