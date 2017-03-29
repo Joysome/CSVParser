@@ -1,4 +1,4 @@
-﻿<table class="table">
+﻿<table ng-class="mainTableClass">
     <thead>
         <tr>
             <th ng-repeat="column in columns track by $index" ng-click="sort(this.$index)">{{column.columnName}}</th>

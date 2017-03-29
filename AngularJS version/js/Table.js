@@ -65,7 +65,7 @@ angular.module("simpleTable", [])
                 sortClass: "header-sort-descending"
             }
         };
-        var _columnHeader = function (name, id) {//TODO: need to be renamed as Column and probably made public.
+        var _columnHeader = function (name, id) {
             this.columnName = name;
             this.dataType = _dataTypes.TEXT;
             this.currentSortState = _sortStates.UNSORTED;
@@ -114,7 +114,7 @@ angular.module("simpleTable", [])
             _clear();
             $scope.rows = new Array(dataArray.length);
             for (var i = 0; i < ($scope.rows.length - 1) ; i++) {
-                $scope.rows[i] = new Array((dataArray[0].length + 1));
+                $scope.rows[i] = new Array(dataArray[0].length + 1);
             }
 
             //adding an ID column
@@ -189,20 +189,32 @@ angular.module("simpleTable", [])
                     $scope.columns[col].currentSortState = _sortStates.UNSORTED;
                 }
             }
+
+            var elem = angular.element(event.currentTarget);
+
+            for (sortState in _sortStates) {
+                if (_sortStates[sortState] !== $scope.columns[columnNumber].currentSortState) {
+                    elem.removeClass(_sortStates[sortState].sortClass);
+                }
+                else {
+                    elem.addClass(_sortStates[sortState].sortClass);
+                }
+            }
         };
-        
 
 
         $scope.$watch('datasource', function (neww, old) {
+            $scope.errorMessage = null;
             try {
                 if (angular.isArray(neww) && neww.length !== 0)
                     $scope.populate($scope.datasource);
             }
             catch (e) {
-                alert(e.message);//TEST
+                $scope.errorMessage = e.message;
             }
         }, true);
 
+        // dynamic template choice for errors displaying
         $scope.getTemplateUrl = function () {
             if ($scope.errorMessage === null) {
                 return "./directiveTemplates/tableTemplate.html";
@@ -210,51 +222,17 @@ angular.module("simpleTable", [])
             else {
                 return "./directiveTemplates/errorTemplate.html";
             }
-        }
-    }]
+        };
+    }];
     return {
         template: '<ng-include src="getTemplateUrl()"/>',
         scope: {
-            datasource: "="
+            datasource: "=",
+            mainTableClass: "@tabStyle",
+            exceptionClass: "@errStyle"
         },
         restrict: 'E',
         controller: controller,
         replace: true
-        //    function () {
-        //        //chooseTemplate();
-        //        var html = "<ul>" +
-        //                   '<li ng-click="testClick($index)" ng-repeat="item in columns track by $index">{{item.columnName}} : {{$index}}</li>' +
-        //                   "</ul>";
-        //        html = '<table class="table">' +
-        //               '<thead>' +
-        //               '<tr>' +
-        //               '<th ng-repeat="column in columns track by $index" ng-click="sort(this.$index)">{{column.columnName}}</th>' +
-        //               '</tr>' +
-        //               '</thead>' +
-        //                '<tbody>' +
-        //                '<tr ng-repeat="row in rows">' +
-        //                '<td ng-repeat="cell in row track by $index">{{cell}}</td>' +
-        //                '</tr>' +
-        //                '</tbody>' +
-        //               '</table>';
-        //    return html;
-        //}
-    }
-})
-        .controller("defaultCtrl", function ($scope) {
-
-            $scope.arrayQQ = [1, 2, 3, 4];
-            $scope.newItem;
-
-            $scope.changePrices = function () {
-                for (var i = 0; i < $scope.arrayQQ.length; i++) {
-                    $scope.arrayQQ[i]++;
-                }
-            }
-
-            $scope.addNew = function () {
-                
-                var item = $scope.newItem;
-                $scope.arrayQQ.push(item);
-            }
-        })
+    };
+});
