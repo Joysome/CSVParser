@@ -53,9 +53,6 @@
                 }
                 else if (string[i - 1] !== this.qChar) {
                     resArray[resArrayRowsCounter].push(string.slice(checkStartPosition, i));
-                    if (i === string.length - 1 || string[i + 1] === this.newLineChar) {
-                        resArray[resArrayRowsCounter].push("");
-                    }
                 }
                 checkStartPosition = i + 1;
             }
